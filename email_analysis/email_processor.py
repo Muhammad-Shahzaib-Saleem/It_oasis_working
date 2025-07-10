@@ -98,16 +98,13 @@ class EmailProcessor:
             msg = email.message_from_file(f)
 
         body = ""
-        if msg.is_multipart():
-            for part in msg.walk():
-                content_type = part.get_content_type()
-                if content_type == "text/plain":
-                    body += part.get_payload(decode=True).decode(errors='ignore')
-                elif content_type == "text/html":
-                    soup = BeautifulSoup(part.get_payload(decode=True).decode(errors='ignore'), 'html.parser')
-                    body += soup.get_text()
-        else:
-            body = msg.get_payload(decode=True).decode(errors='ignore')
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            if content_type == "text/plain":
+                body += part.get_payload(decode=True).decode(errors='ignore')
+            elif content_type == "text/html":
+                soup = BeautifulSoup(part.get_payload(decode=True).decode(errors='ignore'), 'html.parser')
+                body += soup.get_text()
         
         _, from_email = parseaddr(msg.get("from", ""))
         _, to_email = parseaddr(msg.get("to", ""))
@@ -141,17 +138,15 @@ class EmailProcessor:
         into a dictionary
         with subject, from, to, date, and body."""
         body = ""
-        if msg.is_multipart():
-            for part in msg.walk():
-                content_type = part.get_content_type()
-                if content_type == "text/plain":
-                    body += part.get_payload(decode=True).decode(errors='ignore')
-                elif content_type == "text/html":
-                    soup = BeautifulSoup(part.get_payload(decode=True).decode(errors='ignore'), 'html.parser')
-                    body += soup.get_text()
-        else:
-            body = msg.get_payload(decode=True).decode(errors='ignore')
-    
+        # if msg.is_multipart():
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            if content_type == "text/plain":
+                body += part.get_payload(decode=True).decode(errors='ignore')
+            elif content_type == "text/html":
+                soup = BeautifulSoup(part.get_payload(decode=True).decode(errors='ignore'), 'html.parser')
+                body += soup.get_text()
+        
         _, from_email = parseaddr(msg.get("from", ""))
         _, to_email = parseaddr(msg.get("to", ""))
     
