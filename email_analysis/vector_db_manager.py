@@ -167,9 +167,9 @@ class VectorDBManager:
                 self.client.reset()
             
             # Remove database files
-            import shutil
-            if os.path.exists(self.db_path):
-                shutil.rmtree(self.db_path)
+            # import shutil
+            # if os.path.exists(self.db_path):
+            #     shutil.rmtree(self.db_path)
             
             # Reinitialize
             self._initialize_db()

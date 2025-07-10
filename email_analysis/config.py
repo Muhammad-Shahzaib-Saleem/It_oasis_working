@@ -6,6 +6,11 @@ load_dotenv()
 # API Configuration
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama3-8b-8192"
+QWEN_MODEL = "qwen/qwq-32b:free"
+DEEP_SEEK_MODEL="deepseek/deepseek-chat-v3-0324:free"
+LLAMA_MODEL="meta-llama/llama-4-maverick:free"
+
+OPEN_ROUTER_API="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"
 
 # Vector Database Configuration
 VECTOR_DB_PATH = "./vector_db"

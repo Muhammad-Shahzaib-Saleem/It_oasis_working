@@ -7,7 +7,7 @@ import time
 from email_processor import EmailProcessor
 from vector_db_manager import VectorDBManager
 from llm_handler import LLMHandler
-from config import PAGE_TITLE, PAGE_ICON, SUPPORTED_FORMATS, MAX_FILE_SIZE
+from config import PAGE_TITLE, PAGE_ICON, SUPPORTED_FORMATS, MAX_FILE_SIZE,VECTOR_DB_PATH
 
 # Page configuration
 st.set_page_config(
@@ -36,40 +36,92 @@ def initialize_components():
         if st.session_state.llm_handler is None:
             st.session_state.llm_handler = LLMHandler()
         
+        if "uploader_key" not in st.session_state:
+            st.session_state.uploader_key = 0
         return True
     except Exception as e:
         st.error(f"Error initializing components: {str(e)}")
         return False
 
-def process_uploaded_file(uploaded_file):
-    """Process uploaded email file"""
-    try:
-        # Save uploaded file temporarily
-        temp_file_path = f"temp_{uploaded_file.name}"
-        with open(temp_file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        
-        # Determine file type
-        file_extension = os.path.splitext(uploaded_file.name)[1].lower()
-        file_type = file_extension[1:]  # Remove the dot
-        
-        # Process emails
-        processor = EmailProcessor()
-        emails = processor.load_emails_from_file(temp_file_path, file_type)
-        
-        # Validate emails
-        valid_emails = processor.validate_emails(emails)
-        
-        # Clean up temp file
-        os.remove(temp_file_path)
-        
-        return valid_emails, len(emails), len(valid_emails)
-        
-    except Exception as e:
-        # Clean up temp file if it exists
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-        raise e
+def process_uploaded_file(uploaded_files):
+    """Process multiple uploaded email files"""
+    all_valid_emails = []
+    total_emails = 0
+
+    for uploaded_file in uploaded_files:
+        temp_file_path = None
+
+        try:
+            if uploaded_file is None or uploaded_file.name.strip() == "":
+                continue  # Skip invalid file
+
+            # Save uploaded file temporarily
+            temp_file_path = f"temp_{uploaded_file.name}"
+            with open(temp_file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            # Determine file type
+            file_extension = os.path.splitext(uploaded_file.name)[1].lower()
+            file_type = file_extension[1:]
+
+            # Process emails
+            processor = EmailProcessor()
+            emails = processor.load_emails_from_file(temp_file_path, file_type)
+
+            # Validate emails
+            valid_emails = processor.validate_emails(emails)
+
+            # Add to totals
+            all_valid_emails.extend(valid_emails)
+            total_emails += len(emails)
+
+        except Exception as e:
+            print(f"❌ Error processing file {uploaded_file.name}: {e}")
+
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+
+    return all_valid_emails, total_emails, len(all_valid_emails)
+def get_directory_size(directory):
+    total = 0
+    for dirpath, _, filenames in os.walk(directory):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total += os.path.getsize(fp)
+    return total / (1024 * 1024)  # MB
+
+
+# def process_uploaded_file(uploaded_file):
+#     """Process uploaded email file"""
+#     temp_file_path = None
+#     try:
+#         # Save uploaded file temporarily
+#         temp_file_path = f"temp_{uploaded_file.name}"
+#         with open(temp_file_path, "wb") as f:
+#             f.write(uploaded_file.getbuffer())
+#
+#         # Determine file type
+#         file_extension = os.path.splitext(uploaded_file.name)[1].lower()
+#         file_type = file_extension[1:]  # Remove the dot
+#
+#         # Process emails
+#         processor = EmailProcessor()
+#         emails = processor.load_emails_from_file(temp_file_path, file_type)
+#
+#         # Validate emails
+#         valid_emails = processor.validate_emails(emails)
+#
+#         # Clean up temp file
+#         os.remove(temp_file_path)
+#
+#         return valid_emails, len(emails), len(valid_emails)
+#
+#     except Exception as e:
+#         # Clean up temp file if it exists
+#         if os.path.exists(temp_file_path):
+#             os.remove(temp_file_path)
+#         raise e
 
 def main():
     """Main application"""
@@ -101,22 +153,10 @@ def main():
         
         # Database management
         st.header("🗄️ Database Management")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Clear Database", type="secondary"):
+
+        if st.button("Reset All", type="primary" ,use_container_width=True):
                 if st.session_state.vector_db:
-                    if st.session_state.vector_db.clear_collection():
-                        st.success("Database cleared!")
-                        st.session_state.emails_loaded = False
-                        st.session_state.email_count = 0
-                        st.rerun()
-                    else:
-                        st.error("Failed to clear database")
-        
-        with col2:
-            if st.button("Reset All", type="secondary"):
-                if st.session_state.vector_db:
+                    
                     if st.session_state.vector_db.delete_database():
                         st.success("Database reset!")
                         st.session_state.emails_loaded = False
@@ -132,22 +172,24 @@ def main():
         st.header("Upload Email Dataset")
         
         # File uploader
-        uploaded_file = st.file_uploader(
+        uploaded_files = st.file_uploader(
             "Choose your email file",
-            type=['csv', 'json', 'txt','.eml'],
-            help=f"Supported formats: {', '.join(SUPPORTED_FORMATS)}. Max size: {MAX_FILE_SIZE // (1024*1024)}MB"
+            accept_multiple_files=True,
+            type=['csv', 'json', 'txt','.eml','.mbox'],
+            help=f"Supported formats: {', '.join(SUPPORTED_FORMATS)}. Max size: {MAX_FILE_SIZE // (1024*1024)}MB",
+            key=st.session_state.uploader_key
         )
-        
-        if uploaded_file is not None:
-            # Display file info
-            st.info(f"📁 File: {uploaded_file.name} ({uploaded_file.size:,} bytes)")
+
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                st.info(f"📁 File: {uploaded_file.name} ({uploaded_file.size:,} bytes)")
             
             # Process file button
             if st.button("🚀 Process and Load Emails", type="primary"):
                 try:
                     with st.spinner("Processing emails..."):
                         # Process file
-                        valid_emails, total_emails, valid_count = process_uploaded_file(uploaded_file)
+                        valid_emails, total_emails, valid_count = process_uploaded_file(uploaded_files)
                         
                         # Display processing results
                         col1, col2, col3 = st.columns(3)
@@ -158,7 +200,7 @@ def main():
                         with col3:
                             st.metric("Success Rate", f"{(valid_count/total_emails*100):.1f}%" if total_emails > 0 else "0%")
                         
-                        if valid_count >= 1000:
+                        if valid_count >= 10000:
                             st.success(f"✅ Found {valid_count:,} valid emails (meets minimum requirement of 1000+)")
                         elif valid_count > 0:
                             st.warning(f"⚠️ Found {valid_count} valid emails (less than 1000, but will proceed)")
@@ -185,6 +227,8 @@ def main():
                                     st.subheader("📊 Dataset Summary")
                                     st.markdown(summary)
                                 
+                                uploaded_files.clear()
+                                st.session_state.uploader_key += 1
                                 st.rerun()
                             else:
                                 st.error("❌ Failed to load emails into vector database")
@@ -272,7 +316,7 @@ def main():
         with col1:
             st.metric("Total Emails", f"{collection_info.get('count', 0):,}")
         with col2:
-            st.metric("Database Size", f"{collection_info.get('count', 0) * 0.5:.1f} KB")
+            st.metric("Database Size", f"{get_directory_size(VECTOR_DB_PATH):.2f} MB")
         with col3:
             st.metric("Collection Name", collection_info.get('name', 'N/A'))
         
