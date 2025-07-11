@@ -13,6 +13,5 @@ beautifulsoup4
 protobuf==3.20.3
 
 
-
 # Use pysqlite3 to override default sqlite3 version
 pysqlite3-binary
