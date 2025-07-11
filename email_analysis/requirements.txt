@@ -10,4 +10,4 @@ faker
 dotenv
 openai
 beautifulsoup4
-protobuf
+protobuf==3.20.3
