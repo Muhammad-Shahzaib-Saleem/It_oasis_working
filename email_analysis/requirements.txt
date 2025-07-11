@@ -10,6 +10,5 @@ faker>=20.0.0
 dotenv~=0.9.9
 openai~=1.74.0
 beautifulsoup4~=4.13.4
-bs4
 protobuf==4.25.3
-pysqlite
+sqlite3
