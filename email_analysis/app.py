@@ -9,6 +9,14 @@ from vector_db_manager import VectorDBManager
 from llm_handler import LLMHandler
 from config import PAGE_TITLE, PAGE_ICON, SUPPORTED_FORMATS, MAX_FILE_SIZE,VECTOR_DB_PATH
 
+
+import os
+import sys
+
+# Force Python to use pysqlite3 for ChromaDB
+os.environ["PYTHON_SQLITE3_LIBRARY"] = "pysqlite3"
+sys.modules["sqlite3"] = __import__("pysqlite3")
+
 # Page configuration
 st.set_page_config(
     page_title=PAGE_TITLE,
