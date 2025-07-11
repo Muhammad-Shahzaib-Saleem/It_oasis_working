@@ -10,7 +10,7 @@ QWEN_MODEL = "qwen/qwq-32b:free"
 DEEP_SEEK_MODEL="deepseek/deepseek-chat-v3-0324:free"
 LLAMA_MODEL="meta-llama/llama-4-maverick:free"
 
-OPEN_ROUTER_API="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"
+OPEN_ROUTER_API="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"
 
 # Vector Database Configuration
 VECTOR_DB_PATH = "./vector_db"

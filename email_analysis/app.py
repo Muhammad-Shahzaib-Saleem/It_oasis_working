@@ -32,6 +32,7 @@ def initialize_components():
     try:
         if st.session_state.vector_db is None:
             st.session_state.vector_db = VectorDBManager()
+            
         
         if st.session_state.llm_handler is None:
             st.session_state.llm_handler = LLMHandler()
@@ -155,14 +156,19 @@ def main():
         st.header("🗄️ Database Management")
 
         if st.button("Reset All", type="primary" ,use_container_width=True):
+                print("outsideeeeeeeeeeeeeeeeeeeeeeeeeeee","I m    here")
+            
                 if st.session_state.vector_db:
-                    
+                    print("sssssssssssssssssssssssssssssssssss","I m    here")
                     if st.session_state.vector_db.delete_database():
+                        print("nested iffffffff","I m    here")
+                        
                         st.success("Database reset!")
                         st.session_state.emails_loaded = False
                         st.session_state.email_count = 0
                         st.rerun()
                     else:
+                            
                         st.error("Failed to reset database")
     
     # Main content
@@ -288,7 +294,7 @@ def main():
                             st.subheader("📋 Search Results")
                             
                             for i, result in enumerate(search_results, 1):
-                                with st.expander(f"Result {i} (Relevance: {(1-result['distance']):.2f})"):
+                                with st.expander(f"Result {i} (Relevance: {(1-result['score']):.2f})"):
                                     metadata = result['metadata']
                                     
                                     # Display metadata in a nice format
