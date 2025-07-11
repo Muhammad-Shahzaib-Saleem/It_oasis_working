@@ -156,12 +156,9 @@ def main():
         st.header("🗄️ Database Management")
 
         if st.button("Reset All", type="primary" ,use_container_width=True):
-                print("outsideeeeeeeeeeeeeeeeeeeeeeeeeeee","I m    here")
-            
+                
                 if st.session_state.vector_db:
-                    print("sssssssssssssssssssssssssssssssssss","I m    here")
                     if st.session_state.vector_db.delete_database():
-                        print("nested iffffffff","I m    here")
                         
                         st.success("Database reset!")
                         st.session_state.emails_loaded = False
