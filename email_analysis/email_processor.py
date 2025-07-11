@@ -2,7 +2,6 @@ import pandas as pd
 import json
 import re
 from typing import List, Dict, Any
-from email_validator import validate_email, EmailNotValidError
 import email
 from bs4 import BeautifulSoup
 import os
