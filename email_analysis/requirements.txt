@@ -11,5 +11,3 @@ dotenv~=0.9.9
 openai~=1.74.0
 beautifulsoup4~=4.13.4
 protobuf==4.25.3
-sqlite3database
-sqlite3
